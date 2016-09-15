@@ -119,7 +119,6 @@ class GridTest extends PHPUnit_Framework_TestCase
         $this->assertEquals(array(), $this->grid->getAttribute('grid'));
         $this->assertEquals(0, $this->grid->getAttribute('width'));
         $this->assertEquals(0, $this->grid->getAttribute('height'));
-        $this->assertEquals(false, $this->grid->getAttribute('resolved'));
         $this->assertEquals(0, $this->grid->getAttribute('emptyCaseCount'));
     }
 
@@ -135,7 +134,6 @@ class GridTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($expectedGrid, $this->grid->getAttribute('grid'));
         $this->assertEquals(2, $this->grid->getAttribute('width'));
         $this->assertEquals(4, $this->grid->getAttribute('height'));
-        $this->assertEquals(false, $this->grid->getAttribute('resolved'));
         $this->assertEquals(8, $this->grid->getAttribute('emptyCaseCount'));
     }
 

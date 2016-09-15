@@ -12,8 +12,6 @@ class Grid
     const ZERO = 0;
     const ONE = 1;
 
-    const CONSECUTIVE_LIMIT = 2;
-
     /**
      * @var int
      */
@@ -30,36 +28,39 @@ class Grid
     protected $grid = array();
 
     /**
-     * @var bool
-     */
-    protected $resolved = false;
-
-    /**
      * @var int
      */
     protected $emptyCaseCount = 0;
 
     /**
+     * @var Checker
+     */
+    protected $checker;
+
+    /**
      * Grid constructor.
      * @param null $width
      * @param null $height
+     * @throws InvalidGridException
      */
     public function __construct($width = null, $height = null)
     {
+        $this->checker = new Checker($this);
         if (!is_null($width) && !is_null($height)) {
-            $this->checkSideLength('width', $width);
-            $this->checkSideLength('height', $height);
-
-            $this->width = (int)$width;
-            $this->height = (int)$height;
-            $this->generateEmptyGrid();
+            $this->checker->checkSides($width, $height);
+            $this->generateEmptyGrid($width, $height);
         }
         else if (!is_null($width)) {
-            throw new \InvalidArgumentException('Not defined height');
+            throw new InvalidGridException('Not defined height');
         }
         else if (!is_null($height)) {
-            throw new \InvalidArgumentException('Not defined height');
+            throw new InvalidGridException('Not defined height');
         }
+    }
+
+    public function __clone()
+    {
+        $this->checker = new Checker($this);
     }
 
     /**
@@ -69,8 +70,8 @@ class Grid
      */
     public function setGridValue($lineNo, $columnNo, $value)
     {
-        $this->checkGridPosition($lineNo, $columnNo);
-        $this->checkGridValue($value);
+        $this->checker->checkGridPosition($lineNo, $columnNo);
+        $this->checker->checkGridValue($value);
 
         $current = $this->grid[$lineNo][$columnNo];
         if ($current === $value) {
@@ -86,35 +87,6 @@ class Grid
     }
 
     /**
-     * @param $value
-     */
-    protected function checkGridValue($value)
-    {
-        $allowedValues = array(
-            static::UNDEFINED,
-            static::ZERO,
-            static::ONE,
-        );
-        if (!in_array($value, $allowedValues, true)) {
-            throw new \InvalidArgumentException('Expected value: ' . implode(', ', $allowedValues));
-        }
-    }
-
-    /**
-     * @param $lineNo
-     * @param $columnNo
-     */
-    protected function checkGridPosition($lineNo, $columnNo)
-    {
-        if ($lineNo < 0 || $lineNo >= $this->height) {
-            throw new \InvalidArgumentException('Expected line: 0 to ' . $this->height);
-        }
-        if ($columnNo < 0 || $columnNo >= $this->width) {
-            throw new \InvalidArgumentException('Expected column: 0 to ' . $this->width);
-        }
-    }
-
-    /**
      * @param string $gridString
      */
     public function setGridFromString($gridString)
@@ -124,17 +96,16 @@ class Grid
             function($line) {
                 /** @var string $line */
                 $rows = str_split($line, 1);
-                foreach ($rows as $i => &$row) {
-                    if ($row === '0') {
-                        $row = static::ZERO;
+                foreach ($rows as $i => $value) {
+                    if ($value === '0') {
+                        $rows[$i] = static::ZERO;
+                        continue;
                     }
-                    else if ($row === '1') {
-                        $row = static::ONE;
+                    if ($value === '1') {
+                        $rows[$i] = static::ONE;
+                        continue;
                     }
-                    else {
-                        $row = static::UNDEFINED;
-                    }
-                    unset($row);
+                    $rows[$i] = static::UNDEFINED;
                 }
                 return $rows;
             },
@@ -154,7 +125,7 @@ class Grid
         }
         $emptyCaseCount = 0;
         $currentRowCount = 0;
-        foreach ($grid as $i => $line) {
+        foreach ($grid as $line) {
             $rowCount = count($line);
             if ($rowCount % 2 !== 0) {
                 throw new \InvalidArgumentException('The grid should have an even number of column.');
@@ -165,8 +136,8 @@ class Grid
             else if ($currentRowCount !== $rowCount) {
                 throw new \InvalidArgumentException('The grid does not form a rectangle.');
             }
-            foreach ($line as $j => $value) {
-                $this->checkGridValue($value);
+            foreach ($line as $value) {
+                $this->checker->checkGridValue($value);
                 if ($value === static::UNDEFINED) {
                     $emptyCaseCount++;
                 }
@@ -176,15 +147,31 @@ class Grid
         $this->height = $lineCount;
         $this->width = $currentRowCount;
         $this->emptyCaseCount = $emptyCaseCount;
-        $this->checkHasResolved();
+        $this->getChecker()->checkHasResolved();
     }
 
     /**
-     * @return bool
+     * @return Checker
      */
-    public function hasResolved()
+    public function &getChecker()
     {
-        return $this->resolved;
+        return $this->checker;
+    }
+
+    /**
+     * @return int
+     */
+    public function getHeight()
+    {
+        return $this->height;
+    }
+
+    /**
+     * @return int
+     */
+    public function getWidth()
+    {
+        return $this->width;
     }
 
     /**
@@ -209,9 +196,9 @@ class Grid
     public function getGridString()
     {
         $result = array();
-        foreach ($this->grid as $lineNo => $line) {
+        foreach ($this->grid as $line) {
             $lineDump = array();
-            foreach ($line as $columnNo => $value) {
+            foreach ($line as $value) {
                 $lineDump[] = static::getValueLabel($value);
             }
             $result[] = implode('', $lineDump);
@@ -261,52 +248,6 @@ class Grid
                 return in_array(static::UNDEFINED, $column, true);
             }
         );
-    }
-
-    /**
-     * Check if Grid has resolved
-     */
-    public function checkHasResolved()
-    {
-        $this->resolved = false;
-        if ($this->emptyCaseCount) {
-            return;
-        }
-        // Check rules on all lines
-        for ($lineNo = 0; $lineNo < $this->height; $lineNo++) {
-            $line = $this->getLineByNo($lineNo);
-            if (!$this->checkLineValuesDefined($line)) {
-                return;
-            }
-            if (!$this->checkLineValuesCollision($line)) {
-                return;
-            }
-            if (!$this->checkLineValuesEqualities($line)) {
-                return;
-            }
-        }
-        if (!$this->checkLinesDistinctSeries($this->grid)) {
-            return;
-        }
-        // Check rules on all columns
-        $columns = array();
-        for ($columnNo = 0; $columnNo < $this->width; $columnNo++) {
-            $column = $this->getColumnByNo($columnNo);
-            if (!$this->checkLineValuesDefined($column)) {
-                return;
-            }
-            if (!$this->checkLineValuesCollision($column)) {
-                return;
-            }
-            if (!$this->checkLineValuesEqualities($column)) {
-                return;
-            }
-            $columns[$columnNo] = $column;
-        }
-        if (!$this->checkLinesDistinctSeries($columns)) {
-            return;
-        }
-        $this->resolved = true;
     }
 
     /**
@@ -416,7 +357,7 @@ class Grid
         $ranges = array();
         $firstRangeIndex = null;
         $currentRangeIndex = null;
-        foreach ($undefinedValuePositions as $i => $undefinedValuePosition) {
+        foreach ($undefinedValuePositions as $undefinedValuePosition) {
             if (is_null($firstRangeIndex)) {
                 $firstRangeIndex = $undefinedValuePosition;
                 $currentRangeIndex = $undefinedValuePosition;
@@ -506,7 +447,7 @@ class Grid
                 break;
             }
             $nextLengthPossibilities = array();
-            foreach ($lengthPossibilities as $i => $lengthPossibility) {
+            foreach ($lengthPossibilities as $lengthPossibility) {
                 $zeroAvailable = true;
                 $oneAvailable = true;
                 if ($currentLength > 1) {
@@ -536,7 +477,7 @@ class Grid
         } while($currentLength !== $rangeLength);
 
         $possibilities = array();
-        foreach ($lengthPossibilities as $i => $possibility) {
+        foreach ($lengthPossibilities as $possibility) {
             if ($rightRangeCount > 0 && $currentLength > 2) {
                 $previousValue1 = $possibility['values'][$currentLength - 1];
                 if ($previousValue1 === $rightRangeValues[0]) {
@@ -558,124 +499,16 @@ class Grid
     }
 
     /**
-     * @param array $lines
-     * @return bool
+     * @param integer $width
+     * @param integer $height
      */
-    protected function checkLinesDistinctSeries(array $lines)
+    protected function generateEmptyGrid($width, $height)
     {
-        $convertedLines = array_map(function(array $line) {
-            $line = array_map('static::getValueLabel', $line);
-            return implode($line);
-        }, $lines);
-        return array_unique($convertedLines) === $convertedLines;
-    }
-
-    /**
-     * @param array $line
-     * @return bool
-     */
-    protected function checkLineValuesDefined(array $line)
-    {
-        foreach ($line as $i => $value) {
-            if ($value === static::UNDEFINED) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    /**
-     * @param array $line
-     * @return boolean
-     */
-    protected function checkLineValuesCollision(array $line)
-    {
-        $previousValue = null;
-        $previousValueCount = 1;
-        foreach ($line as $i => $value) {
-            if ($previousValue !== $value) {
-                $previousValue = $value;
-                $previousValueCount = 1;
-                continue;
-            }
-            $previousValueCount++;
-            if ($previousValueCount > static::CONSECUTIVE_LIMIT) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    /**
-     * @param array $line
-     * @return bool
-     */
-    protected function checkLineValuesEqualities(array $line)
-    {
-        $equality = 0;
-        foreach ($line as $i => $value) {
-            if ($value === static::ZERO) {
-                $equality++;
-                continue;
-            }
-            if ($value === static::ONE) {
-                $equality--;
-                continue;
-            }
-        }
-        return $equality === 0;
-    }
-
-    /**
-     * @param $columnNo
-     * @return array
-     */
-    protected function getColumnByNo($columnNo)
-    {
-        $this->checkGridPosition(1, $columnNo);
-        $column = array();
-        foreach ($this->grid as $lineNo => $line) {
-            $column[$lineNo] = $line[$columnNo];
-        }
-        return $column;
-    }
-
-    /**
-     * @param $lineNo
-     * @return array
-     */
-    protected function getLineByNo($lineNo)
-    {
-        $this->checkGridPosition($lineNo, 1);
-        return $this->grid[$lineNo];
-    }
-
-    /**
-     * @param $side
-     * @param $length
-     */
-    protected function checkSideLength($side, $length)
-    {
-        if (!is_numeric($length)) {
-            throw new \InvalidArgumentException('Invalid ' . $side . ' format');
-        }
-        $length = (int)$length;
-        if ($length <= 0) {
-            throw new \InvalidArgumentException('Invalid ' . $side . ' value');
-        }
-        if ($length % 2 !== 0) {
-            throw new \InvalidArgumentException('Invalid ' . $side . ' value');
-        }
-    }
-
-    /**
-     * Generate empty grid
-     */
-    protected function generateEmptyGrid()
-    {
-        $columns = array_fill(0, $this->width, static::UNDEFINED);
-        $this->grid = array_fill(0, $this->height, $columns);
-        $this->emptyCaseCount = $this->width * $this->height;
+        $columns = array_fill(0, $width, static::UNDEFINED);
+        $this->grid = array_fill(0, $height, $columns);
+        $this->emptyCaseCount = $width * $height;
+        $this->width = $width;
+        $this->height = $height;
     }
 
     /**
@@ -684,9 +517,9 @@ class Grid
     public function __toString()
     {
         $result = array();
-        foreach ($this->grid as $lineNo => $line) {
+        foreach ($this->grid as $line) {
             $lineDump = array();
-            foreach ($line as $columnNo => $value) {
+            foreach ($line as $value) {
                 $lineDump[] = static::getValueLabel($value);
             }
             $result[] = implode(' ', $lineDump);

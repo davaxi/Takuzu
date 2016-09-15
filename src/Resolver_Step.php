@@ -201,6 +201,6 @@ class Resolver_Step
             $this->changedColumnNo,
             $this->definedValue
         );
-        $this->resolvedGrid->checkHasResolved();
+        $this->resolvedGrid->getChecker()->checkHasResolved();
     }
 }

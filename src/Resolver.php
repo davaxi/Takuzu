@@ -44,7 +44,7 @@ class Resolver
         $resolverStep->setOriginalGrid($grid);
 
         $this->originalGrid = $grid;
-        $this->resolved = $this->originalGrid->hasResolved();
+        $this->resolved = $this->originalGrid->getChecker()->hasResolved();
         $this->steps[] = $resolverStep;
         if ($this->resolved) {
             $this->resolvedGrid = $grid;
@@ -180,11 +180,11 @@ class Resolver
             if ($value !== Grid::UNDEFINED) {
                 continue;
             }
-            if ($lineNo >= Grid::CONSECUTIVE_LIMIT) {
+            if ($lineNo >= Checker::CONSECUTIVE_LIMIT) {
                 $values = array_slice(
                     $line,
-                    $lineNo - Grid::CONSECUTIVE_LIMIT,
-                    Grid::CONSECUTIVE_LIMIT
+                    $lineNo - Checker::CONSECUTIVE_LIMIT,
+                    Checker::CONSECUTIVE_LIMIT
                 );
                 if ($this->checkDoubleValue($values)) {
                     $reverseValue = Grid::getReverseValue(
@@ -194,18 +194,18 @@ class Resolver
                         $lineNo,
                         $reverseValue,
                         range(
-                            $lineNo - Grid::CONSECUTIVE_LIMIT,
+                            $lineNo - Checker::CONSECUTIVE_LIMIT,
                             $lineNo - 1,
                             1
                         ),
                     );
                 }
             }
-            if ($lineNo < ($length - Grid::CONSECUTIVE_LIMIT)) {
+            if ($lineNo < ($length - Checker::CONSECUTIVE_LIMIT)) {
                 $values = array_slice(
                     $line,
                     $lineNo + 1,
-                    Grid::CONSECUTIVE_LIMIT
+                    Checker::CONSECUTIVE_LIMIT
                 );
                 if ($this->checkDoubleValue($values)) {
                     $reverseValue = Grid::getReverseValue(
@@ -216,7 +216,7 @@ class Resolver
                         $reverseValue,
                         range(
                             $lineNo + 1,
-                            $lineNo + Grid::CONSECUTIVE_LIMIT,
+                            $lineNo + Checker::CONSECUTIVE_LIMIT,
                             1
                         )
                     );
@@ -347,7 +347,7 @@ class Resolver
         }
 
         if ($needValues[Grid::ZERO] < 0 || $needValues[Grid::ONE] < 0) {
-            throw new \LogicException('Grid line not to be resolved.');
+            throw new InvalidGridException('Grid line not to be resolved.');
         }
 
         if ($needValues[Grid::ZERO] === 0) {
@@ -411,7 +411,7 @@ class Resolver
             $rightRangeValues
         );
         if (count($possibilities) < 1) {
-            throw new \LogicException('Grid not solvable');
+            throw new InvalidGridException('Grid not solvable');
         }
         $positions = array_fill(0, $undefinedRange['max'] - $undefinedRange['min'] + 1, null);
         foreach ($possibilities as $possibility) {
@@ -569,7 +569,7 @@ class Resolver
     protected function nextResolveSteps()
     {
         if ($this->resolved) {
-            throw new \LogicException('Grid already resolved');
+            throw new InvalidGridException('Grid already resolved');
         }
 
         $steps = array();
@@ -583,7 +583,7 @@ class Resolver
             try {
                 $nextResolverData = $this->foundNextResolveGridMethod($grid);
             }
-            catch (\LogicException $e) {
+            catch (InvalidGridException $e) {
                 continue;
             }
             if (!$nextResolverData) {
@@ -601,7 +601,7 @@ class Resolver
             );
             $resolvedGrid = $nextResolveStep->getResolvedGrid();
 
-            if ($resolvedGrid->hasResolved()) {
+            if ($resolvedGrid->getChecker()->hasResolved()) {
                 $this->resolved = true;
                 $this->resolvedGrid = $resolvedGrid;
                 $this->finalStep = $nextResolveStep;
