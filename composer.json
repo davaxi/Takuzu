@@ -1,0 +1,38 @@
+{
+  "name": "davaxi/takuzu",
+  "description": "PHP Class to check and resolve step by step Takuzu grids",
+  "version": "1.0.0",
+  "type": "library",
+  "keywords": [
+    "takuzu",
+    "php",
+    "resolver",
+    "binaro"
+  ],
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "David Patiashvili",
+      "email": "stratagem.david@gmail.com",
+      "homepage": "https://www.patiashvili.fr/",
+      "role": "Developer"
+    }
+  ],
+  "support": {
+    "issues": "https://github.com/davaxi/Takuzu/issues",
+    "source": "https://github.com/davaxi/Takuzu/releases"
+  },
+  "minimum-stability": "stable",
+  "require": {
+    "php": ">=5.3.0"
+  },
+  "require-dev": {
+    "php": ">=5.3.0",
+    "codeclimate/php-test-reporter": "dev-master"
+  },
+  "autoload": {
+    "psr-4": {
+      "Davaxi\\": "src/"
+    }
+  }
+}
