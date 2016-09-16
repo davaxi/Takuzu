@@ -3,10 +3,10 @@
 namespace Davaxi\Takuzu;
 
 /**
- * Class Resolver_Step
+ * Class ResolverStep
  * @package Davaxi\Takuzu
  */
-class Resolver_Step
+class ResolverStep
 {
     const TYPE_LINE = 1;
     const TYPE_COLUMN = 2;
@@ -61,7 +61,7 @@ class Resolver_Step
     protected $resolvedGrid;
 
     /**
-     * @var Resolver_Step
+     * @var ResolverStep
      */
     protected $previousStep;
 
@@ -70,13 +70,13 @@ class Resolver_Step
      */
     public function hasPreviousStep()
     {
-        return $this->previousStep instanceof Resolver_Step;
+        return $this->previousStep instanceof ResolverStep;
     }
 
     /**
-     * @param Resolver_Step $previousStep
+     * @param ResolverStep $previousStep
      */
-    public function setPreviousStep(Resolver_Step $previousStep)
+    public function setPreviousStep(ResolverStep $previousStep)
     {
         $this->previousStep = $previousStep;
     }
@@ -186,7 +186,7 @@ class Resolver_Step
     }
 
     /**
-     * @return Resolver_Step
+     * @return ResolverStep
      */
     public function getPreviousStep()
     {

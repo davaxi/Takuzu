@@ -3,10 +3,10 @@
 namespace Davaxi\Takuzu;
 
 /**
- * Class Resolver_Chain
+ * Class ResolverChain
  * @package Davaxi\Takuzu
  */
-class Resolver_Chain
+class ResolverChain
 {
     /**
      * @var Grid
@@ -19,7 +19,7 @@ class Resolver_Chain
     protected $currentGrid;
 
     /**
-     * @var Resolver_Step[]
+     * @var ResolverStep[]
      */
     protected $resolverSteps = array();
 
@@ -35,9 +35,9 @@ class Resolver_Chain
     }
 
     /**
-     * @param Resolver_Step $resolverStep
+     * @param ResolverStep $resolverStep
      */
-    public function addResolverStep(Resolver_Step $resolverStep)
+    public function addResolverStep(ResolverStep $resolverStep)
     {
         $resolverStep->setPreviousStep(
             $this->getLastResolverStep()
@@ -51,7 +51,7 @@ class Resolver_Chain
     }
 
     /**
-     * @return Resolver_Step
+     * @return ResolverStep
      */
     public function getLastResolverStep()
     {
@@ -75,7 +75,7 @@ class Resolver_Chain
     }
 
     /**
-     * @return Resolver_Step[]
+     * @return ResolverStep[]
      */
     public function getResolverSteps()
     {
@@ -84,8 +84,8 @@ class Resolver_Chain
 
     protected function setInitialStep()
     {
-        $resolverStep = new Resolver_Step();
-        $resolverStep->setMethod(Resolver_Step::METHOD_INIT);
+        $resolverStep = new ResolverStep();
+        $resolverStep->setMethod(ResolverStep::METHOD_INIT);
         $resolverStep->setOriginalGrid($this->originalGrid);
         $this->resolverSteps[] = $resolverStep;
     }

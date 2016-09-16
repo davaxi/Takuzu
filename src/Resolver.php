@@ -24,7 +24,7 @@ class Resolver
     protected $resolvedGrid;
 
     /**
-     * @var Resolver_Chain[]
+     * @var ResolverChain[]
      */
     protected $chains = array();
 
@@ -35,7 +35,7 @@ class Resolver
     public function __construct(Grid $grid)
     {
         $this->originalGrid = $grid;
-        $this->chains[] = new Resolver_Chain($grid);
+        $this->chains[] = new ResolverChain($grid);
         $this->resolved = $this->originalGrid->getChecker()->hasResolved();
         if ($this->resolved) {
             $this->resolvedGrid = $grid;
@@ -95,7 +95,7 @@ class Resolver
     {
         return $this->foundMethodOnGrid(
             $grid,
-            Resolver_Step::METHOD_NO_THREE_SIDE,
+            ResolverStep::METHOD_NO_THREE_SIDE,
             'foundNoThreeSideGridLine'
         );
     }
@@ -108,7 +108,7 @@ class Resolver
     {
         return $this->foundMethodOnGrid(
             $grid,
-            Resolver_Step::METHOD_NO_THREE_CENTER,
+            ResolverStep::METHOD_NO_THREE_CENTER,
             'foundNoThreeCenterGridLine'
         );
     }
@@ -121,7 +121,7 @@ class Resolver
     {
         return $this->foundMethodOnGrid(
             $grid,
-            Resolver_Step::METHOD_COMPLETE_EQUALITY,
+            ResolverStep::METHOD_COMPLETE_EQUALITY,
             'foundCompleteEqualityGridLine'
         );
     }
@@ -134,7 +134,7 @@ class Resolver
     {
         return $this->foundMethodOnGrid(
             $grid,
-            Resolver_Step::METHOD_NECESSARY,
+            ResolverStep::METHOD_NECESSARY,
             'foundNecessaryGridLine'
         );
     }
@@ -147,7 +147,7 @@ class Resolver
     {
         return $this->foundMethodOnGrid(
             $grid,
-            Resolver_Step::METHOD_NO_POSSIBLE,
+            ResolverStep::METHOD_NO_POSSIBLE,
             'foundNoPossibleRangeGridLine'
         );
     }
@@ -466,7 +466,7 @@ class Resolver
             list($columnNo, $value, $methodData) = $found;
             return array(
                 $method,
-                Resolver_Step::TYPE_LINE,
+                ResolverStep::TYPE_LINE,
                 $lineNo,
                 $columnNo,
                 $value,
@@ -482,7 +482,7 @@ class Resolver
             list($lineNo, $value, $methodData) = $found;
             return array(
                 $method,
-                Resolver_Step::TYPE_COLUMN,
+                ResolverStep::TYPE_COLUMN,
                 $lineNo,
                 $columnNo,
                 $value,
@@ -506,20 +506,20 @@ class Resolver
     }
 
     /**
-     * @param Resolver_Step $previousStep
+     * @param ResolverStep $previousStep
      * @param Grid $grid
      * @param $value
-     * @return Resolver_Step
+     * @return ResolverStep
      */
-    protected function generateTryResolverStep(Resolver_Step $previousStep, Grid $grid, $value)
+    protected function generateTryResolverStep(ResolverStep $previousStep, Grid $grid, $value)
     {
         list($lineNo, $columnNo) = $grid->getFirstEmptyCasePosition();
         return $this->generateResolverStep(
             $previousStep,
             $grid,
             array(
-                Resolver_Step::METHOD_TEST,
-                Resolver_Step::TYPE_LINE,
+                ResolverStep::METHOD_TEST,
+                ResolverStep::TYPE_LINE,
                 $lineNo,
                 $columnNo,
                 $value,
@@ -529,16 +529,16 @@ class Resolver
     }
 
     /**
-     * @param Resolver_Step $previousStep
+     * @param ResolverStep $previousStep
      * @param Grid $grid
      * @param array $resolveData
-     * @return Resolver_Step
+     * @return ResolverStep
      */
-    protected function generateResolverStep(Resolver_Step $previousStep, Grid $grid, array $resolveData)
+    protected function generateResolverStep(ResolverStep $previousStep, Grid $grid, array $resolveData)
     {
         list($method, $type, $lineNo, $columnNo, $value, $methodData) = $resolveData;
 
-        $nextResolveStep = new Resolver_Step();
+        $nextResolveStep = new ResolverStep();
         $nextResolveStep->setType($type);
         $nextResolveStep->setMethod($method);
         $nextResolveStep->setMethodData($methodData);
