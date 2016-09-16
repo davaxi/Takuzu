@@ -22,16 +22,11 @@ class Resolver
      * @var Grid
      */
     protected $resolvedGrid;
-    
-    /**
-     * @var Resolver_Step[]
-     */
-    protected $steps = array();
 
     /**
-     * @var Resolver_Step
+     * @var Resolver_Chain[]
      */
-    protected $finalStep;
+    protected $chains = array();
 
     /**
      * Resolver constructor.
@@ -39,13 +34,9 @@ class Resolver
      */
     public function __construct(Grid $grid)
     {
-        $resolverStep = new Resolver_Step();
-        $resolverStep->setMethod(Resolver_Step::METHOD_INIT);
-        $resolverStep->setOriginalGrid($grid);
-
         $this->originalGrid = $grid;
+        $this->chains[] = new Resolver_Chain($grid);
         $this->resolved = $this->originalGrid->getChecker()->hasResolved();
-        $this->steps[] = $resolverStep;
         if ($this->resolved) {
             $this->resolvedGrid = $grid;
         }
@@ -65,14 +56,6 @@ class Resolver
     public function getResolvedGrid()
     {
         return $this->resolvedGrid;
-    }
-
-    /**
-     * @return Resolver_Step
-     */
-    public function getFinalStep()
-    {
-        return $this->finalStep;
     }
 
     /**
@@ -572,45 +555,48 @@ class Resolver
             throw new InvalidGridException('Grid already resolved');
         }
 
-        $steps = array();
-        foreach ($this->steps as $i => $resolverStep) {
-            if ($resolverStep->isInitialStep()) {
-                $grid = $resolverStep->getOriginalGrid();
-            }
-            else {
-                $grid = $resolverStep->getResolvedGrid();
-            }
+        $chains = array();
+        foreach ($this->chains as $i => $resolverChain) {
+            $grid = $resolverChain->getCurrentGrid();
+            $lastResolverStep = $resolverChain->getLastResolverStep();
             try {
                 $nextResolverData = $this->foundNextResolveGridMethod($grid);
             }
             catch (InvalidGridException $e) {
                 continue;
             }
+
             if (!$nextResolverData) {
                 if ($grid->getEmptyCaseCount()) {
-                    $steps[] = $this->generateTryResolverStep($resolverStep, $grid, Grid::ZERO);
-                    $steps[] = $this->generateTryResolverStep($resolverStep, $grid, Grid::ONE);
+                    $secondResolverChain = clone $resolverChain;
+
+                    $nextResolverStep = $this->generateTryResolverStep($lastResolverStep, $grid, Grid::ZERO);
+                    $resolverChain->addResolverStep($nextResolverStep);
+                    $chains[] = $resolverChain;
+
+                    $nextResolverStep = $this->generateTryResolverStep($lastResolverStep, $grid, Grid::ONE);
+                    $secondResolverChain->addResolverStep($nextResolverStep);
+                    $chains[] = $secondResolverChain;
                 }
                 continue;
             }
 
-            $nextResolveStep = $this->generateResolverStep(
-                $resolverStep,
+            $nextResolverStep = $this->generateResolverStep(
+                $lastResolverStep,
                 $grid,
                 $nextResolverData
             );
-            $resolvedGrid = $nextResolveStep->getResolvedGrid();
+            $resolverChain->addResolverStep($nextResolverStep);
+            $chains[] = $resolverChain;
+
+            $resolvedGrid = $nextResolverStep->getResolvedGrid();
 
             if ($resolvedGrid->getChecker()->hasResolved()) {
                 $this->resolved = true;
                 $this->resolvedGrid = $resolvedGrid;
-                $this->finalStep = $nextResolveStep;
-                $steps = array();
-                break;
             }
-            $steps[] = $nextResolveStep;
         }
-        $this->steps = $steps;
+        $this->chains = $chains;
     }
 
     public function resolve()
@@ -620,7 +606,7 @@ class Resolver
             if ($this->resolved) {
                 break;
             }
-            if (!$this->steps) {
+            if (!$this->chains) {
                 throw new \UnexpectedValueException('Not found next resolved method');
             }
 

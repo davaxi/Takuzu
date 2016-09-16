@@ -127,7 +127,7 @@ class Checker
      */
     protected function checkLineValuesDefined(array $line)
     {
-        foreach ($line as $i => $value) {
+        foreach ($line as $value) {
             if ($value === Grid::UNDEFINED) {
                 return false;
             }
@@ -143,7 +143,7 @@ class Checker
     {
         $previousValue = null;
         $previousValueCount = 1;
-        foreach ($line as $i => $value) {
+        foreach ($line as $value) {
             if ($previousValue !== $value) {
                 $previousValue = $value;
                 $previousValueCount = 1;
@@ -164,7 +164,7 @@ class Checker
     protected function checkLineValuesEqualities(array $line)
     {
         $equality = 0;
-        foreach ($line as $i => $value) {
+        foreach ($line as $value) {
             if ($value === Grid::ZERO) {
                 $equality++;
                 continue;
