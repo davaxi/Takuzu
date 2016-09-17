@@ -58,6 +58,9 @@ class Grid
         }
     }
 
+    /**
+     * Grid clone
+     */
     public function __clone()
     {
         $this->checker = new Checker($this);
@@ -199,7 +202,7 @@ class Grid
         foreach ($this->grid as $line) {
             $lineDump = array();
             foreach ($line as $value) {
-                $lineDump[] = static::getValueLabel($value);
+                $lineDump[] = GridHelpers::getValueLabel($value);
             }
             $result[] = implode('', $lineDump);
         }
@@ -277,228 +280,6 @@ class Grid
     }
 
     /**
-     * @param $value
-     * @return int
-     */
-    public static function getReverseValue($value)
-    {
-        if ($value === static::ONE) {
-            return static::ZERO;
-        }
-        if ($value === static::ZERO) {
-            return static::ONE;
-        }
-        throw new \InvalidArgumentException('Not exist reverse value for undefined');
-    }
-
-    /**
-     * @param $value
-     * @return string
-     */
-    public static function getValueLabel($value)
-    {
-        switch ($value) {
-            case static::UNDEFINED:
-                return '.';
-                break;
-            case static::ONE:
-                return '1';
-                break;
-            case static::ZERO:
-                return '0';
-                break;
-            default:
-                throw new \UnexpectedValueException('Unknown value: ' . $value);
-        }
-    }
-
-    /**
-     * @param array $line
-     * @return array
-     */
-    public static function getUndefinedLineValues(array $line)
-    {
-        return array_filter($line, function($value) {
-            return $value === Grid::UNDEFINED;
-        });
-    }
-
-    /**
-     * @param array $line
-     * @return array
-     */
-    public static function getZeroLineValues(array $line)
-    {
-        return array_filter($line, function($value) {
-            return $value === Grid::ZERO;
-        });
-    }
-
-    /**
-     * @param array $line
-     * @return array
-     */
-    public static function getOneLineValues(array $line)
-    {
-        return array_filter($line, function($value) {
-            return $value === Grid::ONE;
-        });
-    }
-
-    /**
-     * @param array $line
-     * @return array
-     */
-    public static function getUndefinedRangeLine(array $line)
-    {
-        $undefinedValues = static::getUndefinedLineValues($line);
-        $undefinedValuePositions = array_keys($undefinedValues);
-
-        $ranges = array();
-        $firstRangeIndex = null;
-        $currentRangeIndex = null;
-        foreach ($undefinedValuePositions as $undefinedValuePosition) {
-            if (is_null($firstRangeIndex)) {
-                $firstRangeIndex = $undefinedValuePosition;
-                $currentRangeIndex = $undefinedValuePosition;
-                continue;
-            }
-            if ($undefinedValuePosition === ($currentRangeIndex + 1)) {
-                $currentRangeIndex++;
-                continue;
-            }
-            $ranges[] = array(
-                'min' => $firstRangeIndex,
-                'max' => $currentRangeIndex
-            );
-            $firstRangeIndex = $undefinedValuePosition;
-            $currentRangeIndex = $undefinedValuePosition;
-        }
-        if (!is_null($firstRangeIndex)) {
-            $ranges[] = array(
-                'min' => $firstRangeIndex,
-                'max' => $currentRangeIndex
-            );
-        }
-        return $ranges;
-    }
-
-    /**
-     * @param array $line
-     * @return array
-     */
-    public static function getMissingLineValueDistribution(array $line)
-    {
-        $count = count($line);
-        $needValue = $count / 2;
-        $zeroValues = static::getZeroLineValues($line);
-        $oneValues = static::getOneLineValues($line);
-        return array(
-            static::ZERO => $needValue - count($zeroValues),
-            static::ONE => $needValue - count($oneValues),
-        );
-    }
-
-    /**
-     * @param array $needs
-     * @param array $leftRangeValues
-     * @param array $rightRangeValues
-     * @return array
-     */
-    public static function getRangePossibilities(array $needs, $leftRangeValues = array(), $rightRangeValues = array())
-    {
-        $rangeLength = array_sum($needs);
-        if (!$rangeLength) {
-            return array();
-        }
-
-        $lengthPossibilities = array();
-        $rightRangeCount = count($rightRangeValues);
-        $leftRangeCount = count($leftRangeValues);
-        if ($leftRangeCount > 0) {
-            $lengthPossibilities[] = array(
-                'values' => $leftRangeValues,
-                'needs' => $needs,
-            );
-            $rangeLength += $leftRangeCount;
-            $currentLength = $leftRangeCount;
-        }
-        else {
-            $currentLength = 1;
-            if ($needs[static::ZERO]) {
-                $availableValue = $needs;
-                $availableValue[static::ZERO]--;
-                $lengthPossibilities[] = array(
-                    'values' => array(static::ZERO),
-                    'needs' => $availableValue,
-                );
-            }
-            if ($needs[static::ONE]) {
-                $availableValue = $needs;
-                $availableValue[static::ONE]--;
-                $lengthPossibilities[] = array(
-                    'values' => array(static::ONE),
-                    'needs' => $availableValue,
-                );
-            }
-        }
-        do {
-            if (!$lengthPossibilities) {
-                break;
-            }
-            $nextLengthPossibilities = array();
-            foreach ($lengthPossibilities as $lengthPossibility) {
-                $zeroAvailable = true;
-                $oneAvailable = true;
-                if ($currentLength > 1) {
-                    $previousValue1 = $lengthPossibility['values'][$currentLength - 1];
-                    $previousValue2 = $lengthPossibility['values'][$currentLength - 2];
-                    if ($previousValue1 === $previousValue2) {
-                        $zeroAvailable = $previousValue1 == static::ONE;
-                        $oneAvailable = $previousValue1 == static::ZERO;
-                    }
-                }
-                if ($zeroAvailable && $lengthPossibility['needs'][static::ZERO]) {
-                    $newLengthPossibility = $lengthPossibility;
-                    $newLengthPossibility['needs'][static::ZERO]--;
-                    $newLengthPossibility['values'][] = static::ZERO;
-                    $nextLengthPossibilities[] = $newLengthPossibility;
-                }
-                if ($oneAvailable && $lengthPossibility['needs'][static::ONE]) {
-                    $newLengthPossibility = $lengthPossibility;
-                    $newLengthPossibility['needs'][static::ONE]--;
-                    $newLengthPossibility['values'][] = static::ONE;
-                    $nextLengthPossibilities[] = $newLengthPossibility;
-                }
-            }
-            $currentLength++;
-            $lengthPossibilities = $nextLengthPossibilities;
-
-        } while($currentLength !== $rangeLength);
-
-        $possibilities = array();
-        foreach ($lengthPossibilities as $possibility) {
-            if ($rightRangeCount > 0 && $currentLength > 2) {
-                $previousValue1 = $possibility['values'][$currentLength - 1];
-                if ($previousValue1 === $rightRangeValues[0]) {
-                    $previousValue2 = $possibility['values'][$currentLength - 2];
-                    if ($previousValue1 === $previousValue2) {
-                        continue;
-                    }
-                    if ($rightRangeCount > 1 && $rightRangeValues[0] === $rightRangeValues[1]) {
-                        continue;
-                    }
-                }
-            }
-            if ($leftRangeValues) {
-                $possibility['values'] = array_slice($possibility['values'], $leftRangeCount);
-            }
-            $possibilities[] = array_values($possibility['values']);
-        }
-        return $possibilities;
-    }
-
-    /**
      * @param integer $width
      * @param integer $height
      */
@@ -520,7 +301,7 @@ class Grid
         foreach ($this->grid as $line) {
             $lineDump = array();
             foreach ($line as $value) {
-                $lineDump[] = static::getValueLabel($value);
+                $lineDump[] = GridHelpers::getValueLabel($value);
             }
             $result[] = implode(' ', $lineDump);
         }

@@ -184,7 +184,7 @@ class Checker
     protected function checkLinesDistinctSeries(array $lines)
     {
         $convertedLines = array_map(function(array $line) {
-            $line = array_map('\Davaxi\Takuzu\Grid::getValueLabel', $line);
+            $line = array_map('\Davaxi\Takuzu\GridHelpers::getValueLabel', $line);
             return implode($line);
         }, $lines);
         return array_unique($convertedLines) === $convertedLines;

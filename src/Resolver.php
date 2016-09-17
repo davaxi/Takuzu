@@ -170,7 +170,7 @@ class Resolver
                     Checker::CONSECUTIVE_LIMIT
                 );
                 if ($this->checkDoubleValue($values)) {
-                    $reverseValue = Grid::getReverseValue(
+                    $reverseValue = GridHelpers::getReverseValue(
                         $values[0]
                     );
                     return array(
@@ -191,7 +191,7 @@ class Resolver
                     Checker::CONSECUTIVE_LIMIT
                 );
                 if ($this->checkDoubleValue($values)) {
-                    $reverseValue = Grid::getReverseValue(
+                    $reverseValue = GridHelpers::getReverseValue(
                         $values[0]
                     );
                     return array(
@@ -232,7 +232,7 @@ class Resolver
             if ($line[$lineNo - 1] !== $line[$lineNo + 1]) {
                 continue;
             }
-            $reverseValue = Grid::getReverseValue($line[$lineNo - 1]);
+            $reverseValue = GridHelpers::getReverseValue($line[$lineNo - 1]);
             return array(
                 $lineNo,
                 $reverseValue,
@@ -271,7 +271,7 @@ class Resolver
             if ($count !== $expectedCountValue) {
                 continue;
             }
-            $reverseValue = Grid::getReverseValue($value);
+            $reverseValue = GridHelpers::getReverseValue($value);
             return array(
                 $undefinedLineNo,
                 $reverseValue,
@@ -288,8 +288,8 @@ class Resolver
     protected function foundNecessaryGridLine(array $line)
     {
         $count = count($line);
-        $needValues = Grid::getMissingLineValueDistribution($line);
-        $undefinedRanges = Grid::getUndefinedRangeLine($line);
+        $needValues = GridHelpers::getMissingLineValueDistribution($line);
+        $undefinedRanges = GridHelpers::getUndefinedRangeLine($line);
         foreach ($undefinedRanges as $i => &$range) {
             $range['needs'] = array(
                 Grid::ONE => 0,
@@ -306,7 +306,7 @@ class Resolver
                     $range['needs'][$leftRangeValue],
                     $this->getNoPossibleGridLineRangeValueMin($rangeLength)
                 );
-                $reverseLeftRangeValue = Grid::getReverseValue($leftRangeValue);
+                $reverseLeftRangeValue = GridHelpers::getReverseValue($leftRangeValue);
                 $range['needs'][$reverseLeftRangeValue] = max(
                     $range['needs'][$reverseLeftRangeValue],
                     $this->getNoPossibleGridLineRangeReverseValueMin($rangeLength)
@@ -318,7 +318,7 @@ class Resolver
                     $range['needs'][$rightRangeValue],
                     $this->getNoPossibleGridLineRangeValueMin($rangeLength)
                 );
-                $reverseRightRangeValue = Grid::getReverseValue($rightRangeValue);
+                $reverseRightRangeValue = GridHelpers::getReverseValue($rightRangeValue);
                 $range['needs'][$reverseRightRangeValue] = max(
                     $range['needs'][$reverseRightRangeValue],
                     $this->getNoPossibleGridLineRangeReverseValueMin($rangeLength)
@@ -366,7 +366,7 @@ class Resolver
      */
     protected function foundNoPossibleRangeGridLine(array $line)
     {
-        $undefinedRanges = Grid::getUndefinedRangeLine($line);
+        $undefinedRanges = GridHelpers::getUndefinedRangeLine($line);
         if (count($undefinedRanges) !== 1) {
             return array();
         }
@@ -387,8 +387,8 @@ class Resolver
                 $rightRangeValues[] = $line[$undefinedRange['max'] + 2];
             }
         }
-        $needValues = Grid::getMissingLineValueDistribution($line);
-        $possibilities = Grid::getRangePossibilities(
+        $needValues = GridHelpers::getMissingLineValueDistribution($line);
+        $possibilities = ResolverSeriesGenerator::getRangePossibilities(
             $needValues,
             $leftRangeValues,
             $rightRangeValues
