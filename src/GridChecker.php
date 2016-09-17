@@ -3,10 +3,10 @@
 namespace Davaxi\Takuzu;
 
 /**
- * Class Checker
+ * Class GridChecker
  * @package Davaxi\Takuzu
  */
-class Checker
+class GridChecker
 {
     const CONSECUTIVE_LIMIT = 2;
 

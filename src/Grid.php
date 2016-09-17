@@ -33,9 +33,14 @@ class Grid
     protected $emptyCaseCount = 0;
 
     /**
-     * @var Checker
+     * @var GridChecker
      */
     protected $checker;
+
+    /**
+     * @var GridHelpers
+     */
+    protected $helpers;
 
     /**
      * Grid constructor.
@@ -45,7 +50,8 @@ class Grid
      */
     public function __construct($width = null, $height = null)
     {
-        $this->checker = new Checker($this);
+        $this->checker = new GridChecker($this);
+        $this->helpers = new GridHelpers();
         if (!is_null($width) && !is_null($height)) {
             $this->checker->checkSides($width, $height);
             $this->generateEmptyGrid($width, $height);
@@ -63,7 +69,7 @@ class Grid
      */
     public function __clone()
     {
-        $this->checker = new Checker($this);
+        $this->checker = new GridChecker($this);
     }
 
     /**
@@ -154,7 +160,7 @@ class Grid
     }
 
     /**
-     * @return Checker
+     * @return GridChecker
      */
     public function &getChecker()
     {
@@ -202,7 +208,7 @@ class Grid
         foreach ($this->grid as $line) {
             $lineDump = array();
             foreach ($line as $value) {
-                $lineDump[] = GridHelpers::getValueLabel($value);
+                $lineDump[] = $this->helpers->getValueLabel($value);
             }
             $result[] = implode('', $lineDump);
         }
@@ -301,7 +307,7 @@ class Grid
         foreach ($this->grid as $line) {
             $lineDump = array();
             foreach ($line as $value) {
-                $lineDump[] = GridHelpers::getValueLabel($value);
+                $lineDump[] = $this->helpers->getValueLabel($value);
             }
             $result[] = implode(' ', $lineDump);
         }

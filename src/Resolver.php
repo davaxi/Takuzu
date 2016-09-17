@@ -163,11 +163,11 @@ class Resolver
             if ($value !== Grid::UNDEFINED) {
                 continue;
             }
-            if ($lineNo >= Checker::CONSECUTIVE_LIMIT) {
+            if ($lineNo >= GridChecker::CONSECUTIVE_LIMIT) {
                 $values = array_slice(
                     $line,
-                    $lineNo - Checker::CONSECUTIVE_LIMIT,
-                    Checker::CONSECUTIVE_LIMIT
+                    $lineNo - GridChecker::CONSECUTIVE_LIMIT,
+                    GridChecker::CONSECUTIVE_LIMIT
                 );
                 if ($this->checkDoubleValue($values)) {
                     $reverseValue = GridHelpers::getReverseValue(
@@ -177,18 +177,18 @@ class Resolver
                         $lineNo,
                         $reverseValue,
                         range(
-                            $lineNo - Checker::CONSECUTIVE_LIMIT,
+                            $lineNo - GridChecker::CONSECUTIVE_LIMIT,
                             $lineNo - 1,
                             1
                         ),
                     );
                 }
             }
-            if ($lineNo < ($length - Checker::CONSECUTIVE_LIMIT)) {
+            if ($lineNo < ($length - GridChecker::CONSECUTIVE_LIMIT)) {
                 $values = array_slice(
                     $line,
                     $lineNo + 1,
-                    Checker::CONSECUTIVE_LIMIT
+                    GridChecker::CONSECUTIVE_LIMIT
                 );
                 if ($this->checkDoubleValue($values)) {
                     $reverseValue = GridHelpers::getReverseValue(
@@ -199,7 +199,7 @@ class Resolver
                         $reverseValue,
                         range(
                             $lineNo + 1,
-                            $lineNo + Checker::CONSECUTIVE_LIMIT,
+                            $lineNo + GridChecker::CONSECUTIVE_LIMIT,
                             1
                         )
                     );
