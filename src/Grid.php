@@ -200,9 +200,10 @@ class Grid
     }
 
     /**
+     * @param string $separator
      * @return string
      */
-    public function getGridString()
+    public function getGridString($separator = '')
     {
         $result = array();
         foreach ($this->grid as $line) {
@@ -210,7 +211,7 @@ class Grid
             foreach ($line as $value) {
                 $lineDump[] = $this->helpers->getValueLabel($value);
             }
-            $result[] = implode('', $lineDump);
+            $result[] = implode($separator, $lineDump);
         }
         return implode("\n", $result);
     }
@@ -303,15 +304,7 @@ class Grid
      */
     public function __toString()
     {
-        $result = array();
-        foreach ($this->grid as $line) {
-            $lineDump = array();
-            foreach ($line as $value) {
-                $lineDump[] = $this->helpers->getValueLabel($value);
-            }
-            $result[] = implode(' ', $lineDump);
-        }
-        return implode("\n", $result);
+        return $this->getGridString(' ');
     }
 
 }
