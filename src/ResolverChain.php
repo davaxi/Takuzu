@@ -31,7 +31,6 @@ class ResolverChain
     {
         $this->originalGrid = $originalGrid;
         $this->currentGrid = $originalGrid;
-        $this->setInitialStep();
     }
 
     /**
@@ -39,19 +38,17 @@ class ResolverChain
      */
     public function addResolverStep(ResolverStep $resolverStep)
     {
-        $resolverStep->setPreviousStep(
-            $this->getLastResolverStep()
-        );
-        $resolverStep->setOriginalGrid(
-            $this->getCurrentGrid()
-        );
-        $resolverStep->resolve();
+        if ($this->resolverSteps) {
+            $resolverStep->setPreviousStep(
+                $this->getLastResolverStep()
+            );
+        }
         $this->resolverSteps[] = $resolverStep;
         $this->currentGrid = $resolverStep->getResolvedGrid();
     }
 
     /**
-     * @return ResolverStep
+     * @return mixed
      */
     public function getLastResolverStep()
     {
@@ -82,11 +79,4 @@ class ResolverChain
         return $this->resolverSteps;
     }
 
-    protected function setInitialStep()
-    {
-        $resolverStep = new ResolverStep();
-        $resolverStep->setMethod(ResolverStep::METHOD_INIT);
-        $resolverStep->setOriginalGrid($this->originalGrid);
-        $this->resolverSteps[] = $resolverStep;
-    }
 }

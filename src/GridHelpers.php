@@ -66,8 +66,7 @@ class GridHelpers
      */
     public static function getUndefinedRangeLine(array $line)
     {
-        $values = static::getUndefinedLineValues($line);
-        $valuesPositions = array_keys($values);
+        $valuesPositions = static::getUndefinedLinePositions($line);
 
         $ranges = array();
         $firstRangeIndex = null;
@@ -98,6 +97,15 @@ class GridHelpers
         return $ranges;
     }
 
+    /**
+     * @param array $line
+     * @return mixed
+     */
+    public static function getUndefinedLinePositions(array $line)
+    {
+        $values = static::getUndefinedLineValues($line);
+        return array_keys($values);
+    }
 
     /**
      * @param array $line

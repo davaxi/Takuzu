@@ -1,6 +1,7 @@
 <?php
 
 namespace Davaxi\Takuzu;
+use Davaxi\Takuzu\ResolverMethod\RandomValue;
 
 /**
  * Class Resolver
@@ -27,6 +28,17 @@ class Resolver
      * @var ResolverChain[]
      */
     protected $chains = array();
+
+    /**
+     * @var ResolverMethod[]
+     */
+    protected $resolverMethods = array(
+        '\Davaxi\Takuzu\ResolverMethod\NoThreeSide',
+        '\Davaxi\Takuzu\ResolverMethod\NoThreeCenter',
+        '\Davaxi\Takuzu\ResolverMethod\CompleteEquality',
+        '\Davaxi\Takuzu\ResolverMethod\NecessaryValues',
+        '\Davaxi\Takuzu\ResolverMethod\NoPossibleRange',
+    );
 
     /**
      * Resolver constructor.
@@ -60,491 +72,41 @@ class Resolver
 
     /**
      * @param Grid $grid
-     * @return array
+     * @return ResolverMethod|null
      */
     protected function foundNextResolveGridMethod(Grid $grid)
     {
-        $found = $this->foundNoThreeSideGrid($grid);
-        if ($found) {
-            return $found;
+        foreach ($this->resolverMethods as $resolverMethodClass) {
+            /** @var ResolverMethod $resolverMethod */
+            $resolverMethod = new $resolverMethodClass($grid);
+            if ($resolverMethod->found()) {
+                return $resolverMethod;
+            }
         }
-        $found = $this->foundNoThreeCenterGrid($grid);
-        if ($found) {
-            return $found;
-        }
-        $found = $this->foundCompleteEqualityGrid($grid);
-        if ($found) {
-            return $found;
-        }
-        $found = $this->foundNecessaryGrid($grid);
-        if ($found) {
-            return $found;
-        }
-        $found = $this->foundNoPossibleRangeGrid($grid);
-        if ($found) {
-            return $found;
-        }
-        return array();
+        return null;
     }
 
     /**
-     * @param Grid $grid
-     * @return array
-     */
-    protected function foundNoThreeSideGrid(Grid $grid)
-    {
-        return $this->foundMethodOnGrid(
-            $grid,
-            ResolverStep::METHOD_NO_THREE_SIDE,
-            'foundNoThreeSideGridLine'
-        );
-    }
-
-    /**
-     * @param Grid $grid
-     * @return array
-     */
-    protected function foundNoThreeCenterGrid(Grid $grid)
-    {
-        return $this->foundMethodOnGrid(
-            $grid,
-            ResolverStep::METHOD_NO_THREE_CENTER,
-            'foundNoThreeCenterGridLine'
-        );
-    }
-
-    /**
-     * @param Grid $grid
-     * @return array
-     */
-    protected function foundCompleteEqualityGrid(Grid $grid)
-    {
-        return $this->foundMethodOnGrid(
-            $grid,
-            ResolverStep::METHOD_COMPLETE_EQUALITY,
-            'foundCompleteEqualityGridLine'
-        );
-    }
-
-    /**
-     * @param Grid $grid
-     * @return array
-     */
-    protected function foundNecessaryGrid(Grid $grid)
-    {
-        return $this->foundMethodOnGrid(
-            $grid,
-            ResolverStep::METHOD_NECESSARY,
-            'foundNecessaryGridLine'
-        );
-    }
-
-    /**
-     * @param Grid $grid
-     * @return array
-     */
-    protected function foundNoPossibleRangeGrid(Grid $grid)
-    {
-        return $this->foundMethodOnGrid(
-            $grid,
-            ResolverStep::METHOD_NO_POSSIBLE,
-            'foundNoPossibleRangeGridLine'
-        );
-    }
-
-    /**
-     * @param array $line
-     * @return array
-     */
-    protected function foundNoThreeSideGridLine(array $line)
-    {
-        $length = count($line);
-        foreach ($line as $lineNo => $value) {
-            if ($value !== Grid::UNDEFINED) {
-                continue;
-            }
-            if ($lineNo >= GridChecker::CONSECUTIVE_LIMIT) {
-                $values = array_slice(
-                    $line,
-                    $lineNo - GridChecker::CONSECUTIVE_LIMIT,
-                    GridChecker::CONSECUTIVE_LIMIT
-                );
-                if ($this->checkDoubleValue($values)) {
-                    $reverseValue = GridHelpers::getReverseValue(
-                        $values[0]
-                    );
-                    return array(
-                        $lineNo,
-                        $reverseValue,
-                        range(
-                            $lineNo - GridChecker::CONSECUTIVE_LIMIT,
-                            $lineNo - 1,
-                            1
-                        ),
-                    );
-                }
-            }
-            if ($lineNo < ($length - GridChecker::CONSECUTIVE_LIMIT)) {
-                $values = array_slice(
-                    $line,
-                    $lineNo + 1,
-                    GridChecker::CONSECUTIVE_LIMIT
-                );
-                if ($this->checkDoubleValue($values)) {
-                    $reverseValue = GridHelpers::getReverseValue(
-                        $values[0]
-                    );
-                    return array(
-                        $lineNo,
-                        $reverseValue,
-                        range(
-                            $lineNo + 1,
-                            $lineNo + GridChecker::CONSECUTIVE_LIMIT,
-                            1
-                        )
-                    );
-                }
-            }
-        }
-        return array();
-    }
-
-    /**
-     * @param array $line
-     * @return array
-     */
-    protected function foundNoThreeCenterGridLine(array $line)
-    {
-        $length = count($line);
-        foreach ($line as $lineNo => $value) {
-            if ($lineNo === 0) {
-                continue;
-            }
-            if ($lineNo === ($length - 1)) {
-                continue;
-            }
-            if ($value !== Grid::UNDEFINED) {
-                continue;
-            }
-            if ($line[$lineNo - 1] === Grid::UNDEFINED) {
-                continue;
-            }
-            if ($line[$lineNo - 1] !== $line[$lineNo + 1]) {
-                continue;
-            }
-            $reverseValue = GridHelpers::getReverseValue($line[$lineNo - 1]);
-            return array(
-                $lineNo,
-                $reverseValue,
-                array(
-                    $lineNo - 1,
-                    $lineNo + 1,
-                ),
-            );
-        }
-        return array();
-    }
-
-    /**
-     * @param array $line
-     * @return array
-     */
-    protected function foundCompleteEqualityGridLine(array $line)
-    {
-        $length = count($line);
-        $undefinedLineNo = null;
-        $values = array(
-            Grid::ONE => 0,
-            Grid::ZERO => 0,
-        );
-        foreach ($line as $lineNo => $value) {
-            if ($value === Grid::UNDEFINED) {
-                if ($undefinedLineNo === null) {
-                    $undefinedLineNo = $lineNo;
-                }
-                continue;
-            }
-            $values[$value]++;
-        }
-        $expectedCountValue = $length / 2;
-        foreach ($values as $value => $count) {
-            if ($count !== $expectedCountValue) {
-                continue;
-            }
-            $reverseValue = GridHelpers::getReverseValue($value);
-            return array(
-                $undefinedLineNo,
-                $reverseValue,
-                array(),
-            );
-        }
-        return array();
-    }
-
-    /**
-     * @param array $line
-     * @return array
-     */
-    protected function foundNecessaryGridLine(array $line)
-    {
-        $count = count($line);
-        $needValues = GridHelpers::getMissingLineValueDistribution($line);
-        $undefinedRanges = GridHelpers::getUndefinedRangeLine($line);
-        foreach ($undefinedRanges as $i => &$range) {
-            $range['needs'] = array(
-                Grid::ONE => 0,
-                Grid::ZERO => 0,
-            );
-            $rangeLength = $range['max'] - $range['min'] + 1;
-            if ($rangeLength < 2) {
-                unset($range);
-                continue;
-            }
-            if ($range['min'] > 0) {
-                $leftRangeValue = $line[$range['min'] - 1];
-                $range['needs'][$leftRangeValue] = max(
-                    $range['needs'][$leftRangeValue],
-                    $this->getNoPossibleGridLineRangeValueMin($rangeLength)
-                );
-                $reverseLeftRangeValue = GridHelpers::getReverseValue($leftRangeValue);
-                $range['needs'][$reverseLeftRangeValue] = max(
-                    $range['needs'][$reverseLeftRangeValue],
-                    $this->getNoPossibleGridLineRangeReverseValueMin($rangeLength)
-                );
-            }
-            if ($range['max'] < ($count - 1)) {
-                $rightRangeValue = $line[$range['max'] + 1];
-                $range['needs'][$rightRangeValue] = max(
-                    $range['needs'][$rightRangeValue],
-                    $this->getNoPossibleGridLineRangeValueMin($rangeLength)
-                );
-                $reverseRightRangeValue = GridHelpers::getReverseValue($rightRangeValue);
-                $range['needs'][$reverseRightRangeValue] = max(
-                    $range['needs'][$reverseRightRangeValue],
-                    $this->getNoPossibleGridLineRangeReverseValueMin($rangeLength)
-                );
-            }
-            $needValues[Grid::ZERO] -= $range['needs'][Grid::ZERO];
-            $needValues[Grid::ONE] -= $range['needs'][Grid::ONE];
-            unset($range);
-        }
-
-        if ($needValues[Grid::ZERO] < 0 || $needValues[Grid::ONE] < 0) {
-            throw new InvalidGridException('Grid line not to be resolved.');
-        }
-
-        if ($needValues[Grid::ZERO] === 0) {
-            foreach ($undefinedRanges as $i => $range) {
-                if ($range['needs'][Grid::ZERO] !== 0) {
-                    continue;
-                }
-                return array(
-                    $range['min'],
-                    Grid::ONE,
-                    $undefinedRanges
-                );
-            }
-        }
-        if ($needValues[Grid::ONE] === 0) {
-            foreach ($undefinedRanges as $i => $range) {
-                if ($range['needs'][Grid::ONE] !== 0) {
-                    continue;
-                }
-                return array(
-                    $range['min'],
-                    Grid::ZERO,
-                    $undefinedRanges
-                );
-            }
-        }
-        return array();
-    }
-
-    /**
-     * @param array $line
-     * @return array
-     */
-    protected function foundNoPossibleRangeGridLine(array $line)
-    {
-        $undefinedRanges = GridHelpers::getUndefinedRangeLine($line);
-        if (count($undefinedRanges) !== 1) {
-            return array();
-        }
-        $count = count($line);
-        $undefinedRange = $undefinedRanges[0];
-
-        $leftRangeValues = array();
-        if ($undefinedRange['min'] > 0) {
-            array_unshift($leftRangeValues, $line[$undefinedRange['min'] - 1]);
-            if ($undefinedRange['min'] > 1) {
-                array_unshift($leftRangeValues, $line[$undefinedRange['min'] - 2]);
-            }
-        }
-        $rightRangeValues = array();
-        if ($undefinedRange['max'] < ($count - 1)) {
-            $rightRangeValues[] = $line[$undefinedRange['max'] + 1];
-            if (($undefinedRange['max'] + 1) < ($count - 1)) {
-                $rightRangeValues[] = $line[$undefinedRange['max'] + 2];
-            }
-        }
-        $needValues = GridHelpers::getMissingLineValueDistribution($line);
-        $possibilities = ResolverSeriesGenerator::getRangePossibilities(
-            $needValues,
-            $leftRangeValues,
-            $rightRangeValues
-        );
-        if (count($possibilities) < 1) {
-            throw new InvalidGridException('Grid not solvable');
-        }
-        $positions = array_fill(0, $undefinedRange['max'] - $undefinedRange['min'] + 1, null);
-        foreach ($possibilities as $possibility) {
-            foreach ($positions as $positionNo => $currentPositionValue) {
-                if ($currentPositionValue === null) {
-                    $positions[$positionNo] = $possibility[$positionNo];
-                    continue;
-                }
-                if ($currentPositionValue !== $possibility[$positionNo]) {
-                    unset($positions[$positionNo]);
-                    continue;
-                }
-            }
-        }
-        if (!$positions) {
-            return array();
-        }
-        $positionValue = reset($positions);
-        $positionKey = key($positions);
-        return array(
-            $undefinedRange['min'] + $positionKey,
-            $positionValue,
-            array(
-                'range' => $undefinedRange,
-                'possibilities' => $possibilities,
-            ),
-        );
-
-    }
-
-    /**
-     * @param $rangeLength
-     * @return int
-     */
-    protected function getNoPossibleGridLineRangeValueMin($rangeLength)
-    {
-        if ($rangeLength < 2) {
-            return 0;
-        }
-        return (int)floor($rangeLength / 3);
-    }
-
-    /**
-     * @param $rangeLength
-     * @return int
-     */
-    protected function getNoPossibleGridLineRangeReverseValueMin($rangeLength)
-    {
-        if ($rangeLength < 2) {
-            return 0;
-        }
-        return (int)floor(($rangeLength + 1) / 3);
-    }
-
-    /**
-     * @param Grid $grid
-     * @param $method
-     * @param $callback
-     * @return array
-     */
-    protected function foundMethodOnGrid(Grid $grid, $method, $callback)
-    {
-        $unresolvedLines = $grid->getUnresolvedLines();
-        foreach ($unresolvedLines as $lineNo => $line) {
-            $found = $this->$callback($line);
-            if (!$found) {
-                continue;
-            }
-            list($columnNo, $value, $methodData) = $found;
-            return array(
-                $method,
-                ResolverStep::TYPE_LINE,
-                $lineNo,
-                $columnNo,
-                $value,
-                $methodData
-            );
-        }
-        $unresolvedColumns = $grid->getUnresolvedColumns();
-        foreach ($unresolvedColumns as $columnNo => $column) {
-            $found = $this->$callback($column);
-            if (!$found) {
-                continue;
-            }
-            list($lineNo, $value, $methodData) = $found;
-            return array(
-                $method,
-                ResolverStep::TYPE_COLUMN,
-                $lineNo,
-                $columnNo,
-                $value,
-                $methodData
-            );
-        }
-        return array();
-    }
-
-    /**
-     * @param array $values
-     * @return bool
-     */
-    protected function checkDoubleValue(array $values)
-    {
-        if (in_array(Grid::UNDEFINED, $values, true)) {
-            return false;
-        }
-        $values = array_unique($values);
-        return count($values) === 1;
-    }
-
-    /**
-     * @param ResolverStep $previousStep
      * @param Grid $grid
      * @param $value
      * @return ResolverStep
      */
-    protected function generateTryResolverStep(ResolverStep $previousStep, Grid $grid, $value)
+    protected function generateTryResolverStep(Grid $grid, $value)
     {
         list($lineNo, $columnNo) = $grid->getFirstEmptyCasePosition();
-        return $this->generateResolverStep(
-            $previousStep,
-            $grid,
-            array(
-                ResolverStep::METHOD_TEST,
-                ResolverStep::TYPE_LINE,
-                $lineNo,
-                $columnNo,
-                $value,
-                array(),
-            )
-        );
+        $resolverMethod = new RandomValue($grid);
+        $resolverMethod->setValue($lineNo, $columnNo, $value);
+        return $this->generateResolverStep($resolverMethod);
     }
 
     /**
-     * @param ResolverStep $previousStep
-     * @param Grid $grid
-     * @param array $resolveData
+     * @param ResolverMethod $resolverMethod
      * @return ResolverStep
      */
-    protected function generateResolverStep(ResolverStep $previousStep, Grid $grid, array $resolveData)
+    protected function generateResolverStep(ResolverMethod $resolverMethod)
     {
-        list($method, $type, $lineNo, $columnNo, $value, $methodData) = $resolveData;
-
         $nextResolveStep = new ResolverStep();
-        $nextResolveStep->setType($type);
-        $nextResolveStep->setMethod($method);
-        $nextResolveStep->setMethodData($methodData);
-        $nextResolveStep->setPreviousStep($previousStep);
-        $nextResolveStep->setOriginalGrid($grid);
-        $nextResolveStep->setGridValue($lineNo, $columnNo, $value);
+        $nextResolveStep->setResolverMethod($resolverMethod);
         $nextResolveStep->resolve();
         return $nextResolveStep;
     }
@@ -554,43 +116,41 @@ class Resolver
         if ($this->resolved) {
             throw new InvalidGridException('Grid already resolved');
         }
-
         $chains = array();
         foreach ($this->chains as $i => $resolverChain) {
             $grid = $resolverChain->getCurrentGrid();
-            $lastResolverStep = $resolverChain->getLastResolverStep();
             try {
-                $nextResolverData = $this->foundNextResolveGridMethod($grid);
+                $resolveMethod = $this->foundNextResolveGridMethod($grid);
             }
             catch (InvalidGridException $e) {
                 continue;
             }
 
-            if (!$nextResolverData) {
-                if ($grid->getEmptyCaseCount()) {
-                    $secondResolverChain = clone $resolverChain;
-
-                    $nextResolverStep = $this->generateTryResolverStep($lastResolverStep, $grid, Grid::ZERO);
-                    $resolverChain->addResolverStep($nextResolverStep);
-                    $chains[] = $resolverChain;
-
-                    $nextResolverStep = $this->generateTryResolverStep($lastResolverStep, $grid, Grid::ONE);
-                    $secondResolverChain->addResolverStep($nextResolverStep);
-                    $chains[] = $secondResolverChain;
+            if ($resolveMethod === null) {
+                if (!$grid->getEmptyCaseCount()) {
+                    continue;
                 }
+
+                $secondResolverChain = clone $resolverChain;
+
+                $nextResolverStep = $this->generateTryResolverStep($grid, Grid::ZERO);
+                $resolverChain->addResolverStep($nextResolverStep);
+                $chains[] = $resolverChain;
+
+                $nextResolverStep = $this->generateTryResolverStep($grid, Grid::ONE);
+                $secondResolverChain->addResolverStep($nextResolverStep);
+                $chains[] = $secondResolverChain;
                 continue;
             }
 
-            $nextResolverStep = $this->generateResolverStep(
-                $lastResolverStep,
-                $grid,
-                $nextResolverData
-            );
+            $nextResolverStep = $this->generateResolverStep($resolveMethod);
             $resolverChain->addResolverStep($nextResolverStep);
             $chains[] = $resolverChain;
 
             $resolvedGrid = $nextResolverStep->getResolvedGrid();
-
+            if ($grid->getGridString() === $resolvedGrid->getGridString()) {
+                throw new \LogicException('No change ?');
+            }
             if ($resolvedGrid->getChecker()->hasResolved()) {
                 $this->resolved = true;
                 $this->resolvedGrid = $resolvedGrid;

@@ -8,6 +8,9 @@ namespace Davaxi\Takuzu;
  */
 class ResolverSeriesGenerator
 {
+    /**
+     * @var array
+     */
     protected static $values = array(
         Grid::ZERO,
         Grid::ONE

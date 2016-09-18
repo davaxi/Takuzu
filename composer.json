@@ -1,7 +1,7 @@
 {
   "name": "davaxi/takuzu",
   "description": "PHP Class to check and resolve step by step Takuzu grids",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "type": "library",
   "keywords": [
     "takuzu",
