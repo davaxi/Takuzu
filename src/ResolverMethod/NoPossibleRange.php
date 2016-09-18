@@ -2,7 +2,7 @@
 
 namespace Davaxi\Takuzu\ResolverMethod;
 
-use Davaxi\Takuzu\GridHelpers;
+use Davaxi\Takuzu\Grid;
 use Davaxi\Takuzu\InvalidGridException;
 use Davaxi\Takuzu\ResolverMethod;
 use Davaxi\Takuzu\ResolverSeriesGenerator;
@@ -21,12 +21,23 @@ class NoPossibleRange extends ResolverMethod
     protected $foundedPossibilities;
 
     /**
+     * @var ResolverSeriesGenerator
+     */
+    protected $seriesGenerator;
+
+    public function __construct(Grid $grid)
+    {
+        parent::__construct($grid);
+        $this->seriesGenerator = new ResolverSeriesGenerator();
+    }
+
+    /**
      * @param array $line
      * @return boolean
      */
     protected function foundOnGridLine(array $line)
     {
-        $undefinedRanges = GridHelpers::getUndefinedRangeLine($line);
+        $undefinedRanges = static::$helpers->getUndefinedRangeLine($line);
         if (count($undefinedRanges) !== 1) {
             return false;
         }
@@ -41,8 +52,8 @@ class NoPossibleRange extends ResolverMethod
             $rightLength = $length - ($undefinedRange['max'] + 1);
             $rightValues = array_slice($line, $undefinedRange['max'] + 1, $rightLength);
         }
-        $needValues = GridHelpers::getMissingLineValueDistribution($line);
-        $possibilities = ResolverSeriesGenerator::getRangePossibilities($needValues, $leftValues, $rightValues);
+        $needValues = static::$helpers->getMissingLineValueDistribution($line);
+        $possibilities = $this->seriesGenerator->getRangePossibilities($needValues, $leftValues, $rightValues);
         if (count($possibilities) < 1) {
             throw new InvalidGridException('Grid not solvable');
         }

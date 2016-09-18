@@ -117,7 +117,7 @@ class Resolver
             throw new InvalidGridException('Grid already resolved');
         }
         $chains = array();
-        foreach ($this->chains as $i => $resolverChain) {
+        foreach ($this->chains as $resolverChain) {
             $grid = $resolverChain->getCurrentGrid();
             try {
                 $resolveMethod = $this->foundNextResolveGridMethod($grid);

@@ -2,7 +2,6 @@
 
 namespace Davaxi\Takuzu\ResolverMethod;
 
-use Davaxi\Takuzu\GridHelpers;
 use Davaxi\Takuzu\ResolverMethod;
 
 /**
@@ -19,14 +18,14 @@ class CompleteEquality extends ResolverMethod
      */
     protected function foundOnGridLine(array $line)
     {
-        $needs = GridHelpers::getMissingLineValueDistribution($line);
+        $needs = static::$helpers->getMissingLineValueDistribution($line);
         foreach ($needs as $value => $needCount) {
             if ($needCount) {
                 continue;
             }
             $this->foundedValues = array_fill_keys(
-                GridHelpers::getUndefinedLinePositions($line),
-                GridHelpers::getReverseValue($value)
+                static::$helpers->getUndefinedLinePositions($line),
+                static::$helpers->getReverseValue($value)
             );
             return true;
         }

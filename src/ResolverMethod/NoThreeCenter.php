@@ -3,7 +3,6 @@
 namespace Davaxi\Takuzu\ResolverMethod;
 
 use Davaxi\Takuzu\Grid;
-use Davaxi\Takuzu\GridHelpers;
 use Davaxi\Takuzu\ResolverMethod;
 
 /**
@@ -25,7 +24,7 @@ class NoThreeCenter extends ResolverMethod
      */
     protected function foundOnGridLine(array $line)
     {
-        $positions = GridHelpers::getUndefinedLinePositions($line);
+        $positions = static::$helpers->getUndefinedLinePositions($line);
         foreach ($positions as $position) {
             if (static::checkLineRange($line, $position)) {
                 return true;
@@ -55,7 +54,7 @@ class NoThreeCenter extends ResolverMethod
         if ($line[$beforePosition] === Grid::UNDEFINED) {
             return false;
         }
-        $this->foundedValues[$position] = GridHelpers::getReverseValue($line[$beforePosition]);
+        $this->foundedValues[$position] = static::$helpers->getReverseValue($line[$beforePosition]);
         return true;
     }
 

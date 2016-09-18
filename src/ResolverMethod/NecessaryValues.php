@@ -3,7 +3,6 @@
 namespace Davaxi\Takuzu\ResolverMethod;
 
 use Davaxi\Takuzu\Grid;
-use Davaxi\Takuzu\GridHelpers;
 use Davaxi\Takuzu\InvalidGridException;
 use Davaxi\Takuzu\ResolverMethod;
 
@@ -32,8 +31,8 @@ class NecessaryValues extends ResolverMethod
     protected function foundOnGridLine(array $line)
     {
         $count = count($line);
-        $needValues = GridHelpers::getMissingLineValueDistribution($line);
-        $undefinedRanges = GridHelpers::getUndefinedRangeLine($line);
+        $needValues = static::$helpers->getMissingLineValueDistribution($line);
+        $undefinedRanges = static::$helpers->getUndefinedRangeLine($line);
         foreach ($undefinedRanges as $i => &$range) {
             $range['needs'] = array(
                 Grid::ONE => 0,
@@ -63,6 +62,16 @@ class NecessaryValues extends ResolverMethod
             unset($range);
         }
 
+        return $this->checkExistNecessaryValues($needValues, $undefinedRanges);
+    }
+
+    /**
+     * @param array $needValues
+     * @param array $undefinedRanges
+     * @return bool
+     */
+    protected function checkExistNecessaryValues(array &$needValues, array &$undefinedRanges)
+    {
         if ($needValues[Grid::ZERO] < 0 || $needValues[Grid::ONE] < 0) {
             throw new InvalidGridException('Grid line not to be resolved.');
         }
@@ -76,7 +85,7 @@ class NecessaryValues extends ResolverMethod
                     continue;
                 }
                 for ($position = $range['min']; $position <= $position['max']; $position++) {
-                    $this->foundedValues[$position] = GridHelpers::getReverseValue($value);
+                    $this->foundedValues[$position] = static::$helpers->getReverseValue($value);
                 }
             }
             if ($this->foundedValues) {
@@ -101,7 +110,7 @@ class NecessaryValues extends ResolverMethod
             $rangeNeeds[$sideValue],
             static::getNoPossibleRangeValueMin($rangeLength)
         );
-        $reverseSideValue = GridHelpers::getReverseValue($sideValue);
+        $reverseSideValue = static::$helpers->getReverseValue($sideValue);
         $rangeNeeds[$reverseSideValue] = max(
             $rangeNeeds[$reverseSideValue],
             static::getNoPossibleRangeReverseValueMin($rangeLength)

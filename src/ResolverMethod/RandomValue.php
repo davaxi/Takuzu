@@ -3,7 +3,6 @@
 namespace Davaxi\Takuzu\ResolverMethod;
 
 use Davaxi\Takuzu\Grid;
-use Davaxi\Takuzu\GridHelpers;
 use Davaxi\Takuzu\ResolverMethod;
 
 /**
@@ -28,7 +27,7 @@ class RandomValue extends ResolverMethod
      */
     protected function foundOnGridLine(array $line)
     {
-        return true;
+        return count($line) > 0;
     }
 
     /**

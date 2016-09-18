@@ -52,12 +52,18 @@ abstract class ResolverMethod
     protected $founded = false;
 
     /**
+     * @var GridHelpers
+     */
+    protected static $helpers;
+
+    /**
      * ResolverMethod constructor.
      * @param Grid $grid
      */
     public function __construct(Grid $grid)
     {
         $this->originalGrid = $grid;
+        static::$helpers = new GridHelpers();
     }
 
     /**
