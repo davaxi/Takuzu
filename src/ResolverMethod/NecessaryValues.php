@@ -33,7 +33,7 @@ class NecessaryValues extends ResolverMethod
         $count = count($line);
         $needValues = static::$helpers->getMissingLineValueDistribution($line);
         $undefinedRanges = static::$helpers->getUndefinedRangeLine($line);
-        foreach ($undefinedRanges as $i => &$range) {
+        foreach ($undefinedRanges as &$range) {
             $range['needs'] = array(
                 Grid::ONE => 0,
                 Grid::ZERO => 0,
@@ -80,7 +80,7 @@ class NecessaryValues extends ResolverMethod
             if ($needValues[$value] > 0) {
                 continue;
             }
-            foreach ($undefinedRanges as $i => $range) {
+            foreach ($undefinedRanges as $range) {
                 if ($range['needs'][$value] !== 0) {
                     continue;
                 }
