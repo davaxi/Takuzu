@@ -13,6 +13,7 @@
     <testsuites>
         <testsuite name="General tests">
             <directory suffix=".php">./tests/</directory>
+            <directory suffix=".php">./tests/ResolverMethod/</directory>
         </testsuite>
     </testsuites>
 </phpunit>
