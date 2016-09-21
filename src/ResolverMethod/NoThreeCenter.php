@@ -14,11 +14,6 @@ class NoThreeCenter extends ResolverMethod
     const METHOD_NAME = 'NoThreeCenter';
 
     /**
-     * @var integer
-     */
-    protected $foundedWay;
-
-    /**
      * @param array $line
      * @return boolean
      */
