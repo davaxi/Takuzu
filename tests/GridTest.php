@@ -113,6 +113,18 @@ class GridTest extends PHPUnit_Framework_TestCase
         new Grid_Mockup(2);
     }
 
+    public function testClone()
+    {
+        $original = new Grid_Mockup(10, 6);
+        $copy = clone $original;
+        $this->assertEquals($original->getWidth(), $copy->getWidth());
+        $this->assertEquals($original->getHeight(), $copy->getHeight());
+        $this->assertEquals($original->getEmptyCaseCount(), $copy->getEmptyCaseCount());
+        $this->assertEquals($original->getGridArray(), $copy->getGridArray());
+        $this->assertSame($original->getHelpers(), $copy->getHelpers());
+        $this->assertNotSame($original->getChecker(), $copy->getChecker());
+    }
+
     public function testConstruct_Empty()
     {
         $this->grid = new Grid_Mockup();
@@ -138,6 +150,66 @@ class GridTest extends PHPUnit_Framework_TestCase
     }
 
     /**
+     * @expectedException \Davaxi\Takuzu\InvalidGridException
+     */
+    public function testSetGridValue_InvalidLinePosition()
+    {
+        $this->grid = new Grid_Mockup(2, 4);
+        $this->grid->setGridValue(5, 1, Grid::ONE);
+    }
+
+    /**
+     * @expectedException \Davaxi\Takuzu\InvalidGridException
+     */
+    public function testSetGridValue_InvalidColumnPosition()
+    {
+        $this->grid = new Grid_Mockup(2, 4);
+        $this->grid->setGridValue(3, 2, Grid::ONE);
+    }
+
+    public function testSetGridValue_Equals()
+    {
+        $this->grid = new Grid_Mockup(2, 4);
+        $originalEmptyCount = $this->grid->getEmptyCaseCount();
+        $this->grid->setGridValue(0, 0, Grid::UNDEFINED);
+        $emptyCount = $this->grid->getEmptyCaseCount();
+        $this->assertEquals($originalEmptyCount, $emptyCount);
+    }
+
+    public function testSetGridValue_toUndefined()
+    {
+        $this->grid = new Grid_Mockup();
+        $this->grid->setGridFromArray([[1, -1],  [-1, -1]]);
+        $originalEmptyCount = $this->grid->getEmptyCaseCount();
+        $this->grid->setGridValue(0, 0, Grid::UNDEFINED);
+        $emptyCount = $this->grid->getEmptyCaseCount();
+        $this->assertEquals($originalEmptyCount + 1, $emptyCount);
+        $gridArray = $this->grid->getGridArray();
+        $this->assertEquals([[-1, -1], [-1, -1]], $gridArray);
+    }
+
+    public function testSetGridValue_toDefined()
+    {
+        $this->grid = new Grid_Mockup();
+        $this->grid->setGridFromArray([[-1, -1],  [-1, -1]]);
+        $originalEmptyCount = $this->grid->getEmptyCaseCount();
+        $this->grid->setGridValue(0, 0, Grid::ONE);
+        $emptyCount = $this->grid->getEmptyCaseCount();
+        $this->assertEquals($originalEmptyCount - 1, $emptyCount);
+        $gridArray = $this->grid->getGridArray();
+        $this->assertEquals([[1, -1], [-1, -1]], $gridArray);
+    }
+
+    /**
+     * @expectedException InvalidArgumentException
+     */
+    public function testSetGridValue_InvalidValue()
+    {
+        $this->grid = new Grid_Mockup(2, 4);
+        $this->grid->setGridValue(0, 1, 'invalid value');
+    }
+
+    /**
      * @expectedException InvalidArgumentException
      */
     public function testSetGridFromString_InvalidString()
@@ -159,6 +231,101 @@ class GridTest extends PHPUnit_Framework_TestCase
     public function testSetGridFromString_InvalidColumnCount()
     {
         $this->grid->setGridFromString("..1..\n00.10");
+    }
+
+    /**
+     * @expectedException InvalidArgumentException
+     */
+    public function testSetGridFromArray_InvalidDimensions()
+    {
+        $this->grid->setGridFromArray(
+            [
+                [0, 0],
+                [0, 0],
+                [1, 1],
+                [1, 1, 0, 0]
+            ]
+        );
+    }
+
+    public function testGetLines()
+    {
+        $grid = [
+            [0, 0, 1, 1],
+            [0, 1, 0, 1],
+        ];
+        $this->grid->setGridFromArray($grid);
+        $lines = $this->grid->getLines();
+        $this->assertEquals($grid, $lines);
+    }
+
+    public function testGetGridString()
+    {
+        $grid = [
+            [0, 0, 1, 1],
+            [0, 1, 0, 1],
+        ];
+        $this->grid->setGridFromArray($grid);
+        $gridString = $this->grid->getGridString('#');
+        $this->assertEquals("0#0#1#1\n0#1#0#1", $gridString);
+        $gridString = $this->grid->getGridString(' ');
+        $this->assertEquals("0 0 1 1\n0 1 0 1", $gridString);
+    }
+
+    public function testGetUnresolvedLines()
+    {
+        $grid = [
+            [0, 0, 1, 1],
+            [0, -1, 0, 1],
+        ];
+        $this->grid->setGridFromArray($grid);
+        $lines = $this->grid->getUnresolvedLines();
+        $this->assertEquals(
+            [1 => [0, -1, 0, 1]],
+            $lines
+        );
+    }
+
+    public function testGetUnresolvedColumns()
+    {
+        $grid = [
+            [0, 0, 1, -1],
+            [0, 1, -1, -1],
+        ];
+        $this->grid->setGridFromArray($grid);
+        $lines = $this->grid->getUnresolvedColumns();
+        $this->assertEquals(
+            [
+                2 => [1, -1],
+                3 => [-1, -1]
+            ],
+            $lines
+        );
+    }
+
+    /**
+     * @expectedException LogicException
+     */
+    public function testFirstEmptyCase_noEmpty()
+    {
+        $grid = [
+            [0, 0, 1, 1],
+            [0, 1, 0, 1],
+        ];
+        $this->grid->setGridFromArray($grid);
+        $this->grid->getFirstEmptyCasePosition();
+    }
+
+    public function testFirstEmptyCase()
+    {
+        $grid = [
+            [0, -1, 1, 1],
+            [0, 1, -1, 1],
+        ];
+        $this->grid->setGridFromArray($grid);
+        $positions = $this->grid->getFirstEmptyCasePosition();
+        $this->assertInternalType('array', $positions);
+        $this->assertEquals([0, 1], $positions);
     }
 
     /**
@@ -189,5 +356,15 @@ class GridTest extends PHPUnit_Framework_TestCase
         );
         $result = $this->grid->getAttribute('grid');
         $this->assertEquals($expected, $result);
+    }
+
+    public function testToString()
+    {
+        $grid = [
+            [0, 0, 1, 1],
+            [0, 1, 0, 1],
+        ];
+        $this->grid->setGridFromArray($grid);
+        $this->assertEquals("0 0 1 1\n0 1 0 1", (string)$this->grid);
     }
 }

@@ -168,6 +168,14 @@ class Grid
     }
 
     /**
+     * @return GridHelpers
+     */
+    public function &getHelpers()
+    {
+        return $this->helpers;
+    }
+
+    /**
      * @return int
      */
     public function getHeight()
