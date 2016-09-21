@@ -84,7 +84,7 @@ class NecessaryValues extends ResolverMethod
                 if ($range['needs'][$value] !== 0) {
                     continue;
                 }
-                for ($position = $range['min']; $position <= $position['max']; $position++) {
+                for ($position = $range['min']; $position <= $range['max']; $position++) {
                     $this->foundedValues[$position] = static::$helpers->getReverseValue($value);
                 }
             }
