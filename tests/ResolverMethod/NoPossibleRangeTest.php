@@ -150,5 +150,13 @@ class NoPossibleRangeTest extends PHPUnit_Framework_TestCase
         );
     }
 
+    /**
+     * @expectedException Davaxi\Takuzu\InvalidGridException
+     */
+    public function testCompute_withoutFound()
+    {
+        $this->resolverMethod->compute();
+    }
+
 
 }

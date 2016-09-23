@@ -114,7 +114,7 @@ class Resolver
     protected function nextResolveSteps()
     {
         if ($this->resolved) {
-            throw new InvalidGridException('Grid already resolved');
+            throw new \LogicException('Grid already resolved');
         }
         $chains = array();
         foreach ($this->chains as $resolverChain) {

@@ -36,14 +36,14 @@ class ResolverChain
     /**
      * @param ResolverStep $resolverStep
      */
-    public function addResolverStep(ResolverStep $resolverStep)
+    public function addResolverStep(ResolverStep &$resolverStep)
     {
         if ($this->resolverSteps) {
             $resolverStep->setPreviousStep(
                 $this->getLastResolverStep()
             );
         }
-        $this->resolverSteps[] = $resolverStep;
+        $this->resolverSteps[] = &$resolverStep;
         $this->currentGrid = $resolverStep->getResolvedGrid();
     }
 
@@ -58,25 +58,9 @@ class ResolverChain
     /**
      * @return Grid
      */
-    public function getOriginalGrid()
-    {
-        return $this->originalGrid;
-    }
-
-    /**
-     * @return Grid
-     */
     public function getCurrentGrid()
     {
         return $this->currentGrid;
-    }
-
-    /**
-     * @return ResolverStep[]
-     */
-    public function getResolverSteps()
-    {
-        return $this->resolverSteps;
     }
 
 }

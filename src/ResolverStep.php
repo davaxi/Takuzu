@@ -19,14 +19,6 @@ class ResolverStep
     protected $previousStep;
 
     /**
-     * @return bool
-     */
-    public function hasPreviousStep()
-    {
-        return $this->previousStep instanceof ResolverStep;
-    }
-
-    /**
      * @param ResolverMethod $resolverMethod
      */
     public function setResolverMethod(ResolverMethod $resolverMethod)
@@ -45,25 +37,9 @@ class ResolverStep
     /**
      * @return Grid
      */
-    public function getOriginalGrid()
-    {
-        return $this->resolverMethod->getOriginalGrid();
-    }
-
-    /**
-     * @return Grid
-     */
     public function getResolvedGrid()
     {
         return $this->resolverMethod->getResolvedGrid();
-    }
-
-    /**
-     * @return ResolverStep
-     */
-    public function getPreviousStep()
-    {
-        return $this->previousStep;
     }
 
     public function resolve()

@@ -2,6 +2,7 @@
 
 use Davaxi\Takuzu\Grid;
 use Davaxi\Takuzu\Resolver;
+use Davaxi\Takuzu\ResolverMethod;
 
 /**
  * Class Resolver_Mockup
@@ -24,8 +25,28 @@ class Resolver_Mockup extends Resolver
      */
     public function useProtectedMethod($method, array $params)
     {
-        return call_user_func_array($this->$method, $params);
+        return call_user_func_array(array($this, $method), $params);
     }
+}
+
+class ResolverMethodInvalid_Mockup extends ResolverMethod
+{
+    protected function foundOnGridLine(array $line)
+    {
+        $this->foundedValues = [0 => 1];
+        $this->founded = true;
+        return true;
+    }
+}
+
+class Resolver2_Mockup extends Resolver
+{
+    /**
+     * @var ResolverMethod[]
+     */
+    protected $resolverMethods = array(
+        'ResolverMethodInvalid_Mockup',
+    );
 }
 
 /**
@@ -47,6 +68,18 @@ class ResolverTest extends PHPUnit_Framework_TestCase
 
         $this->assertTrue($resolver->hasResolved());
         $this->assertEquals($expectedGridString, $resolvedGridArray);
+    }
+
+    public function testConstruct_resolved()
+    {
+        $grid = new Grid();
+        $grid->setGridFromArray([
+            [0, 1],
+            [1, 0]
+        ]);
+        $resolver = new Resolver_Mockup($grid);
+        $result = $resolver->hasResolved();
+        $this->assertTrue($result);
     }
 
     public function testResolveEasy4()
@@ -241,4 +274,48 @@ class ResolverTest extends PHPUnit_Framework_TestCase
         );
     }
 
+    /**
+     * @expectedException LogicException
+     */
+    public function testNextResolveSteps_alreadyResolved()
+    {
+        $grid = new Grid();
+        $grid->setGridFromArray([
+            [0, 1],
+            [1, 0]
+        ]);
+        $resolver = new Resolver_Mockup($grid);
+        $resolver->useProtectedMethod(
+            'nextResolveSteps',
+            []
+        );
+    }
+
+    /**
+     * @expectedException UnexpectedValueException
+     */
+    public function testResolve_NoPossible()
+    {
+        $grid = new Grid();
+        $grid->setGridFromArray([
+            [1, 0],
+            [1, -1]
+        ]);
+        $resolver = new Resolver_Mockup($grid);
+        $resolver->resolve();
+    }
+
+    /**
+     * @expectedException LogicException
+     */
+    public function testResolve_withInvalidStep()
+    {
+        $grid = new Grid();
+        $grid->setGridFromArray([
+            [1, 0],
+            [1, -1]
+        ]);
+        $resolver = new Resolver2_Mockup($grid);
+        $resolver->resolve();
+    }
 }

@@ -183,4 +183,13 @@ class NecessaryValuesTest extends PHPUnit_Framework_TestCase
             $this->assertEquals($expected, $result, $assert);
         }
     }
+
+    /**
+     * @expectedException Davaxi\Takuzu\InvalidGridException
+     */
+    public function testCompute_withoutFound()
+    {
+        $this->resolverMethod->compute();
+    }
+
 }

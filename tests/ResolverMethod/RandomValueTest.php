@@ -53,6 +53,14 @@ class RandomValueTest extends PHPUnit_Framework_TestCase
         unset($this->resolverMethod);
     }
 
+    public function testGetOriginal()
+    {
+        $grid = new Grid();
+        $this->resolverMethod = new RandomValueMockup($grid);
+        $originalGrid = $this->resolverMethod->getOriginalGrid();
+        $this->assertSame($grid, $originalGrid);
+    }
+
     public function testMethodName()
     {
         $this->assertEquals('RandomValue', RandomValueMockup::METHOD_NAME);
@@ -90,6 +98,14 @@ class RandomValueTest extends PHPUnit_Framework_TestCase
         $this->assertTrue($result);
         $foundValues = $this->resolverMethod->getAttribute('foundedValues');
         $this->assertEquals([], $foundValues);
+    }
+
+    /**
+     * @expectedException Davaxi\Takuzu\InvalidGridException
+     */
+    public function testCompute_withoutSet()
+    {
+        $this->resolverMethod->compute();
     }
 
     public function testSetValue()

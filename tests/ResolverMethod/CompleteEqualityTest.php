@@ -100,4 +100,14 @@ class CompleteEqualityTest extends PHPUnit_Framework_TestCase
             5 => 1
         ], $foundValues);
     }
+
+    /**
+     * @expectedException Davaxi\Takuzu\InvalidGridException
+     */
+    public function testCompute_withoutFound()
+    {
+        $this->resolverMethod->compute();
+    }
+
+
 }

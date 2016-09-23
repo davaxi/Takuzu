@@ -135,4 +135,13 @@ class NoThreeSideTest extends PHPUnit_Framework_TestCase
         $foundValues = $this->resolverMethod->getAttribute('foundedValues');
         $this->assertEquals([], $foundValues);
     }
+
+    /**
+     * @expectedException Davaxi\Takuzu\InvalidGridException
+     */
+    public function testCompute_withoutFound()
+    {
+        $this->resolverMethod->compute();
+    }
+
 }
