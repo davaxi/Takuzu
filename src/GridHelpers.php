@@ -29,19 +29,16 @@ class GridHelpers
      */
     public static function getValueLabel($value)
     {
-        switch ($value) {
-            case Grid::UNDEFINED:
-                return '.';
-                break;
-            case Grid::ONE:
-                return '1';
-                break;
-            case Grid::ZERO:
-                return '0';
-                break;
-            default:
-                throw new \UnexpectedValueException('Unknown value: ' . $value);
+        if ($value === Grid::ONE) {
+            return '1';
         }
+        if ($value === Grid::ZERO) {
+            return '0';
+        }
+        if ($value === Grid::UNDEFINED) {
+            return '.';
+        }
+        throw new \UnexpectedValueException('Unknown value: ' . $value);
     }
 
     /**
