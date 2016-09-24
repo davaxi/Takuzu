@@ -42,6 +42,15 @@ class ResolverStep
         return $this->resolverMethod->getResolvedGrid();
     }
 
+    /**
+     * @return int
+     */
+    public function getCost()
+    {
+        $resolverMethod = $this->resolverMethod;
+        return $resolverMethod::COST;
+    }
+
     public function resolve()
     {
         $this->resolverMethod->compute();

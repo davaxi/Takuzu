@@ -30,6 +30,11 @@ class Resolver
     protected $chains = array();
 
     /**
+     * @var ResolverChain
+     */
+    protected $resolvedChain;
+
+    /**
      * @var ResolverMethod[]
      */
     protected $resolverMethods = array(
@@ -145,7 +150,6 @@ class Resolver
 
             $nextResolverStep = $this->generateResolverStep($resolveMethod);
             $resolverChain->addResolverStep($nextResolverStep);
-            $chains[] = $resolverChain;
 
             $resolvedGrid = $nextResolverStep->getResolvedGrid();
             if ($grid->getGridString() === $resolvedGrid->getGridString()) {
@@ -154,22 +158,32 @@ class Resolver
             if ($resolvedGrid->getChecker()->hasResolved()) {
                 $this->resolved = true;
                 $this->resolvedGrid = $resolvedGrid;
+                $this->resolvedChain = $resolverChain;
+                $chains = array();
+                break;
             }
+            $chains[] = $resolverChain;
         }
         $this->chains = $chains;
     }
 
+    /**
+     * @return ResolverChain
+     */
+    public function getResolvedChain()
+    {
+        return $this->resolvedChain;
+    }
+
     public function resolve()
     {
-        while (true) {
+        do {
             $this->nextResolveSteps();
-            if ($this->resolved) {
-                break;
-            }
-            if (!$this->chains) {
-                throw new \UnexpectedValueException('Not found next resolved method');
-            }
+        }
+        while ($this->chains);
 
+        if (!$this->resolved) {
+            throw new InvalidGridException('Not resovled grid');
         }
     }
 }

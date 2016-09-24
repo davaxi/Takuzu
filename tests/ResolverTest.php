@@ -55,7 +55,7 @@ class Resolver2_Mockup extends Resolver
 class ResolverTest extends PHPUnit_Framework_TestCase
 {
 
-    public function _resolve($originalGridString, $expectedGridString)
+    public function _resolve($originalGridString, $expectedGridString, $expectedMaxCost)
     {
         $grid = new Grid();
         $grid->setGridFromString($originalGridString);
@@ -68,6 +68,10 @@ class ResolverTest extends PHPUnit_Framework_TestCase
 
         $this->assertTrue($resolver->hasResolved());
         $this->assertEquals($expectedGridString, $resolvedGridArray);
+
+        $resolvedChain = $resolver->getResolvedChain();
+        $cost = $resolvedChain->getCost();
+        $this->assertLessThanOrEqual($expectedMaxCost, $cost);
     }
 
     public function testConstruct_resolved()
@@ -94,7 +98,9 @@ class ResolverTest extends PHPUnit_Framework_TestCase
             "0110\n" .
             "1001\n" .
             "0011\n" .
-            "1100"
+            "1100",
+
+            20
         );
     }
 
@@ -122,7 +128,9 @@ class ResolverTest extends PHPUnit_Framework_TestCase
             "0110010011\n" .
             "0100110110\n" .
             "1011001001\n" .
-            "0010110110"
+            "0010110110",
+
+            120
         );
     }
 
@@ -150,7 +158,9 @@ class ResolverTest extends PHPUnit_Framework_TestCase
             "1011001100\n" .
             "1100110010\n" .
             "0010110101\n" .
-            "1011001010"
+            "1011001010",
+
+            130
         );
     }
 
@@ -178,7 +188,9 @@ class ResolverTest extends PHPUnit_Framework_TestCase
             "0101001101\n" .
             "1100110010\n" .
             "1011010100\n" .
-            "0110101001"
+            "0110101001",
+
+            130
         );
     }
 
@@ -206,7 +218,9 @@ class ResolverTest extends PHPUnit_Framework_TestCase
             "0011010101\n" .
             "1101001010\n" .
             "0110100101\n" .
-            "1001010011"
+            "1001010011",
+
+            240
         );
     }
 
@@ -234,7 +248,9 @@ class ResolverTest extends PHPUnit_Framework_TestCase
             "1101001001\n" .
             "1011010010\n" .
             "0100101101\n" .
-            "1011001100"
+            "1011001100",
+
+            290
         );
     }
 
@@ -270,7 +286,9 @@ class ResolverTest extends PHPUnit_Framework_TestCase
             "01100100110011\n" .
             "10011010101010\n" .
             "00110101010101\n" .
-            "01001101001101"
+            "01001101001101",
+
+            220
         );
     }
 
@@ -292,7 +310,7 @@ class ResolverTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * @expectedException UnexpectedValueException
+     * @expectedException Davaxi\Takuzu\InvalidGridException
      */
     public function testResolve_NoPossible()
     {

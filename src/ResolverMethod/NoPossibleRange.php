@@ -14,6 +14,7 @@ use Davaxi\Takuzu\ResolverSeriesGenerator;
 class NoPossibleRange extends ResolverMethod
 {
     const METHOD_NAME = 'NoPossibleRange';
+    const COST = 10;
 
     /**
      * @var array

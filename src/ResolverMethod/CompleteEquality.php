@@ -11,6 +11,7 @@ use Davaxi\Takuzu\ResolverMethod;
 class CompleteEquality extends ResolverMethod
 {
     const METHOD_NAME = 'CompleteEquality';
+    const COST = 3;
 
     /**
      * @param array $line

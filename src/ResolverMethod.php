@@ -12,6 +12,7 @@ abstract class ResolverMethod
     const TYPE_COLUMN = 1;
 
     const METHOD_NAME = '';
+    const COST = 0;
 
     /**
      * @var array

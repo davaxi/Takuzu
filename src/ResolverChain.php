@@ -24,6 +24,11 @@ class ResolverChain
     protected $resolverSteps = array();
 
     /**
+     * @var int
+     */
+    protected $cost = 0;
+
+    /**
      * Resolver_Chain constructor.
      * @param Grid $originalGrid
      */
@@ -45,6 +50,7 @@ class ResolverChain
         }
         $this->resolverSteps[] = &$resolverStep;
         $this->currentGrid = $resolverStep->getResolvedGrid();
+        $this->cost += $resolverStep->getCost();
     }
 
     /**
@@ -61,6 +67,14 @@ class ResolverChain
     public function getCurrentGrid()
     {
         return $this->currentGrid;
+    }
+
+    /**
+     * @return int
+     */
+    public function getCost()
+    {
+        return $this->cost;
     }
 
 }

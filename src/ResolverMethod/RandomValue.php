@@ -12,6 +12,7 @@ use Davaxi\Takuzu\ResolverMethod;
 class RandomValue extends ResolverMethod
 {
     const METHOD_NAME = 'RandomValue';
+    const COST = 15;
 
     public function __construct(Grid $grid)
     {

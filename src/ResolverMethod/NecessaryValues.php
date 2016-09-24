@@ -13,6 +13,7 @@ use Davaxi\Takuzu\ResolverMethod;
 class NecessaryValues extends ResolverMethod
 {
     const METHOD_NAME = 'NecessaryValues';
+    const COST = 6;
 
     /**
      * @var array

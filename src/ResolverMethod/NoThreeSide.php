@@ -12,6 +12,7 @@ use Davaxi\Takuzu\ResolverMethod;
 class NoThreeSide extends ResolverMethod
 {
     const METHOD_NAME = 'NoThreeSide';
+    const COST = 1;
 
     const WAY_BEFORE = 1;
     const WAY_AFTER = 2;

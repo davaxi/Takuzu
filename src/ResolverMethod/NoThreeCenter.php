@@ -12,6 +12,7 @@ use Davaxi\Takuzu\ResolverMethod;
 class NoThreeCenter extends ResolverMethod
 {
     const METHOD_NAME = 'NoThreeCenter';
+    const COST = 2;
 
     /**
      * @param array $line
